@@ -8,7 +8,8 @@ descent](https://arxiv.org/abs/1606.04474). It demonstrates how a learned
 optimizer, implemented as an LSTM, can outperform commonly used hand-crafted
 optimizers.
 
-Currently only the quadratic task is implemented.
+Read more about this on my blog post [Learning JAX By Learning to
+Learn](https://teddykoker.com/2022/04/learning-to-learn-jax/).
 
 ## Usage
 
