@@ -11,7 +11,20 @@ optimizers.
 Read more about this on my blog post [Learning JAX By Learning to
 Learn](https://teddykoker.com/2022/04/learning-to-learn-jax/).
 
+*2024 Update: updated code to work with latest version of JAX. Also using
+[`equinox`](https://github.com/patrick-kidger/equinox) instead of `flax`*.
+
 ## Usage
+
+### Dependencies
+
+Environment can be created very quickly with [uv](https://github.com/astral-sh/uv):
+
+```bash
+pip install uv
+uv sync
+source .venv/bin/activate
+```
 
 ### Train LSTM Optimizer
 

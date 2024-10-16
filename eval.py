@@ -2,10 +2,10 @@ from argparse import ArgumentParser
 from functools import partial
 
 import jax
+import equinox as eqx
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import optax
-from flax import serialization
 
 from model import LSTMOptimizer
 from tasks import quadratic_data, quadratic_task
@@ -41,15 +41,10 @@ def eval(args):
         plt.plot(best_losses, label=name, linestyle="--")
 
     if "lstm" in args.optimizers:
-        lstm_opt = LSTMOptimizer()
-        lstm_state = lstm_opt.initialize_carry(rng, theta)
-        params = lstm_opt.init(rng, theta, lstm_state)
-
-        with open(args.model_path, "rb") as f:
-            params = serialization.from_bytes(params, f.read())
-
-        update = partial(lstm_opt.apply, params)
-        losses, *_ = quadratic_task(w, y, theta, opt_state=lstm_state, opt_fn=update)
+        lstm_opt = LSTMOptimizer(rng)
+        lstm_opt = eqx.tree_deserialise_leaves(args.model_path, lstm_opt)
+        lstm_state = lstm_opt.initialize_carry(theta.shape)
+        losses, *_ = quadratic_task(w, y, theta, opt_state=lstm_state, opt_fn=lstm_opt)
         plt.plot(losses, label="lstm")
 
     plt.legend()
@@ -66,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--optimizers", nargs="+", default=["sgd"])
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--dim", type=int, default=10)
-    parser.add_argument("--model_path", default="models/params.mp")
+    parser.add_argument("--model_path", default="models/params.eqx")
     parser.add_argument("--save_path", default="figures/test.png")
     args = parser.parse_args()
     eval(args)
