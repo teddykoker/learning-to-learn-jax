@@ -9,7 +9,7 @@ class LSTMOptimizer(eqx.Module):
     lstm1: eqx.nn.LSTMCell
     lstm2: eqx.nn.LSTMCell
     fc: eqx.nn.Linear
-    hidden_units: int = 10
+    hidden_units: int = 32
 
     def __init__(self, key):
         keys = jax.random.split(key, 3)
