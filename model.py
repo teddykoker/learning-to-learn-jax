@@ -1,15 +1,24 @@
+from functools import partial
+
+import equinox as eqx
 import jax
-from flax import linen as nn
+import jax.numpy as jnp
 
 
-class LSTMOptimizer(nn.Module):
-    hidden_units: int = 20
+class LSTMOptimizer(eqx.Module):
+    lstm1: eqx.nn.LSTMCell
+    lstm2: eqx.nn.LSTMCell
+    fc: eqx.nn.Linear
+    hidden_units: int = 10
 
-    def setup(self):
-        self.lstm1 = nn.recurrent.LSTMCell()
-        self.lstm2 = nn.recurrent.LSTMCell()
-        self.fc = nn.Dense(1)
+    def __init__(self, key):
+        keys = jax.random.split(key, 3)
+        self.lstm1 = eqx.nn.LSTMCell(1, self.hidden_units, key=keys[0])
+        self.lstm2 = eqx.nn.LSTMCell(self.hidden_units, self.hidden_units, key=keys[1])
+        self.fc = eqx.nn.Linear(self.hidden_units, 1, key=keys[2])
 
+    @partial(jax.vmap, in_axes=(None, 0, 0))
+    @partial(jax.vmap, in_axes=(None, 0, 0))
     def __call__(self, gradient, state):
         # gradients of optimizee do not depend on optimizer
         gradient = jax.lax.stop_gradient(gradient)
@@ -19,14 +28,15 @@ class LSTMOptimizer(nn.Module):
         gradient = gradient[..., None]
 
         carry1, carry2 = state
-        carry1, x = self.lstm1(carry1, gradient)
-        carry2, x = self.lstm2(carry2, x)
-        update = self.fc(x)
+        carry1 = self.lstm1(gradient, carry1)
+        carry2 = self.lstm2(carry1[0], carry2)
+        update = self.fc(carry2[0])
         update = update[..., 0]  # remove last dimension
         return update, (carry1, carry2)
 
-    def initialize_carry(self, rng, params):
+    def initialize_carry(self, input_shape):
+        shape = input_shape + (self.hidden_units,)
         return (
-            nn.LSTMCell.initialize_carry(rng, params.shape, self.hidden_units),
-            nn.LSTMCell.initialize_carry(rng, params.shape, self.hidden_units),
+            (jnp.zeros(shape), jnp.zeros(shape)),
+            (jnp.zeros(shape), jnp.zeros(shape)),
         )
