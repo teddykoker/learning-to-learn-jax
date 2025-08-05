@@ -32,7 +32,7 @@ def eval(args):
         for learning_rate in jnp.logspace(-2, 1, num=7):
             opt = optimizer(learning_rate=learning_rate)
             opt_state = opt.init(theta)
-            losses, *_ = quadratic_task(w, y, theta, opt_state=opt_state, opt_fn=opt.update)
+            losses, *_ = eqx.filter_jit(quadratic_task)(w, y, theta, opt_state=opt_state, opt_fn=opt.update)
 
             if best_losses is None or losses[-1] < best_losses[-1]:
                 best_losses = losses

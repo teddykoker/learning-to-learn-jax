@@ -8,8 +8,8 @@ dependencies = [
     "jax[cuda12]>=0.4.31; sys_platform == 'linux'",
     "jax>=0.4.31; sys_platform == 'darwin'",
     "equinox>=0.11.7",
-    "flax>=0.9.0",
     "matplotlib>=3.9.2",
     "optax>=0.2.3",
     "wandb>=0.18.3",
+    "tqdm>=4.67.1",
 ]

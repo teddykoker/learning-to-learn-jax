@@ -1,5 +1,5 @@
 import jax
-from jax import vmap
+from jax import vmap, lax
 import jax.numpy as jnp
 
 
@@ -17,11 +17,13 @@ def quadratic_task(w, y, theta, opt_fn, opt_state, steps=100):
         product = vmap(jnp.matmul)(w, theta)
         return jnp.mean(jnp.sum((product - y) ** 2, axis=1))
 
-    losses = []
-    for _ in range(steps):
+    def step_fn(carry, _):
+        theta, opt_state = carry
         loss, grads = jax.value_and_grad(f)(theta)
         updates, opt_state = opt_fn(grads, opt_state)
         theta += updates
-        losses.append(loss)
+        return (theta, opt_state), loss
 
-    return jnp.stack(losses), theta, opt_state
+    (theta, opt_state), losses = lax.scan(step_fn, (theta, opt_state), None, length=steps)
+    
+    return losses, theta, opt_state
